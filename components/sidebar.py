@@ -302,7 +302,7 @@ def salveFormDespesa(n, descricao, valor, date, switches, categoria, dictDespesa
     if n and not (valor == '' or valor==None):
         valor = round(float(valor),2)
         date = pd.to_datetime(date).date()
-        categoria = categoria[0]
+        categoria = categoria[0] if type(categoria) == list else categoria
         recebido = 1 if 1 in switches else 0
         fixo = 1 if 2 in switches else 0
         
@@ -337,7 +337,7 @@ def addCategory(n, n2, txt, check_delete, data):
     
     if n and not (txt == '' or txt ==None):
         '''adicionado uma categoria na lista de categoria'''
-        cat_despesa = cat_despesa + txt if txt not in cat_despesa else cat_despesa
+        cat_despesa = cat_despesa + [txt] if txt not in cat_despesa else cat_despesa
         
     if n2:
         if len(check_delete) > 0:

@@ -1,4 +1,3 @@
-from gc import callbacks
 from tracemalloc import start
 from turtle import width
 from dash import html, dcc
@@ -10,7 +9,7 @@ import numpy as np
 import plotly.express as px
 import plotly.graph_objects as go
 import calendar
-#from globals import *
+from globals import *
 from app import app
 
 card_icon = {
@@ -171,3 +170,113 @@ def saldoTotal(despesas, receitas):
     total = df_receitas['Valor'].sum() - df_despesas['Valor'].sum()
     
     return f'R${total:.2f}'
+
+
+@app.callback(
+    Output('graph1', 'figure'),
+    [
+        Input('store-receitas', 'data'),
+        Input('store-despesas', 'data'),
+        Input('dropdow-receita', 'value'),
+        Input('dropdow-despesa', 'value'),
+    ]
+)
+def update_output(data_receita, data_despesa, despesa, receita):
+    #import pdb
+    #pdb.set_trace()
+    grap_margin = dict(l=25, r=25, t=25, b=0)
+    
+    df_receitas = pd.DataFrame(data_receita).set_index('Data')[['Valor']]
+    df_rc = df_receitas.groupby('Data').sum().rename(columns={'Valor':'Receitas'})
+    
+    df_despesas = pd.DataFrame(data_despesa).set_index('Data')[['Valor']]
+    df_ds = df_despesas.groupby('Data').sum().rename(columns={'Valor':'Despesas'})
+    
+    df_acum = df_rc.join(df_ds, how='outer').fillna(0)
+    
+    df_acum['Acum'] = df_acum['Receitas'] - df_acum['Despesas']
+    df_acum['Acum'] = df_acum['Acum'].cumsum()
+
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(name='Fluxo de Caixa', x=df_acum.index, y=df_acum['Acum'], mode='lines'))
+    fig.update_layout(margin=grap_margin)
+    fig.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
+    
+    return fig
+
+
+@app.callback(
+    Output('graph2','figure'),
+    [
+        Input('store-receitas', 'data'),
+        Input('store-despesas', 'data'),
+        Input('dropdow-receita', 'value'),
+        Input('dropdow-despesa', 'value'),
+        Input('date-picker-config', 'start_date'),
+        Input('date-picker-config', 'end_date')
+    ]
+)
+def graph2_show(data_receita, data_despesa, receita, despesa, start_date, end_date):
+    
+    grap_margin = dict(l=25, r=25, t=25, b=0)
+
+    df_rc = pd.DataFrame(data_receita)
+    df_ds = pd.DataFrame(data_despesa)
+    
+    df_rc['Output'] = 'Receitas'
+    df_ds['Output'] = 'Despesas'
+    df_final = pd.concat([df_rc, df_ds])
+    df_final['Data'] = pd.to_datetime(df_final['Data'])
+    
+    start_date = pd.to_datetime(start_date)
+    end_date = pd.to_datetime(end_date)
+    
+    #passando filtros
+    df_final = df_final[(df_final['Data'] >= start_date) & (df_final['Data'] <= end_date)]
+    df_final = df_final[(df_final['Categoria'].isin(receita)) | (df_final['Categoria'].isin(despesa))]
+    
+    fig = px.bar(df_final, x='Data', y='Valor', color='Output', barmode='group')
+    fig.update_layout(margin=grap_margin, height=350)
+    fig.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
+    
+    return fig
+
+
+@app.callback(
+    Output('graph3', 'figure'),
+    [
+        Input('store-receitas', 'data'),
+        Input('dropdow-receita', 'value'),
+    ]   
+)
+def pie_receita(data_receita, receita):
+    grap_margin = dict(l=25, r=25, t=25, b=0)
+    
+    df = pd.DataFrame(data_receita)
+    df = df[df['Categoria'].isin(receita)]
+    
+    fig = px.pie(df, values=df['Valor'], names=df['Categoria'], hole=.2 )
+    fig.update_layout(title={'text':'Receitas'})
+    fig.update_layout(margin=grap_margin, height=350)
+    fig.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
+    return fig
+
+
+@app.callback(
+    Output('graph4', 'figure'),
+    [
+        Input('store-despesas', 'data'),
+        Input('dropdow-despesa', 'value'),
+    ]   
+)
+def pie_receita(data_despesa, despesa):
+    grap_margin = dict(l=25, r=25, t=25, b=0)
+    
+    df = pd.DataFrame(data_despesa)
+    df = df[df['Categoria'].isin(despesa)]
+    
+    fig = px.pie(df, values=df['Valor'], names=df['Categoria'], hole=.2 )
+    fig.update_layout(title={'text':'Receitas'})
+    fig.update_layout(margin=grap_margin, height=350)
+    fig.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
+    return fig
