@@ -15,7 +15,7 @@ from app import app
 layout = dbc.Col([
     dbc.Row([
         html.Legend('Tabela de Despesas'),
-        html.Div(id='tabela-desperar', className='dbc')
+        html.Div(id='tabela-despesas', className='dbc')
     ]),
     
     dbc.Row([
@@ -37,3 +37,36 @@ layout = dbc.Col([
 
 # =========  Callbacks  =========== #
 # Tabela
+@app.callback(
+    Output('tabela-despesas', 'children'),
+    Input('store-despesas', 'data')
+)
+def imprimir_tabela(data):
+    df = pd.DataFrame(data)
+    df['Data'] = pd.to_datetime(df['Data']).dt.date
+    df = df.fillna('-')
+    df.sort_values(by='Data', ascending=False)
+    figure = app.layout = dash_table.DataTable(df.to_dict('records'), [{"name": i, "id": i} for i in df.columns])
+    return figure
+
+
+@app.callback(
+    Output('bar-graph', 'figure'),
+    Input('store-despesas', 'data')
+)
+def bar_chart(data):
+    df = pd.DataFrame(data)
+    dfGrouped = df.groupby('Categoria').sum()[['Valor']].reset_index()
+    graph = px.bar(dfGrouped, x='Categoria', y='Valor', title='Despesas Gerais')
+    graph.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
+    return graph
+    
+
+@app.callback(
+    Output('valor_despesas_card', 'children'),
+    Input('store-despesas', 'data')
+)
+def valor_card_despesa(data):
+    df = pd.DataFrame(data)
+    Valor = df['Valor'].sum()
+    return f'R${Valor}'

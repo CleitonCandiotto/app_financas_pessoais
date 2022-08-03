@@ -276,7 +276,7 @@ def pie_receita(data_despesa, despesa):
     df = df[df['Categoria'].isin(despesa)]
     
     fig = px.pie(df, values=df['Valor'], names=df['Categoria'], hole=.2 )
-    fig.update_layout(title={'text':'Receitas'})
+    fig.update_layout(title={'text':'Despesas'})
     fig.update_layout(margin=grap_margin, height=350)
     fig.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
     return fig

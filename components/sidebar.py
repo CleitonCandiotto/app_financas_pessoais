@@ -80,7 +80,7 @@ layout = dbc.Col([
                                 html.Label('Categoria de Receita'),
                                 dbc.Select(id='select_receita',
                                            options=[{'label' : i, 'value' : i} for i in cat_receita],
-                                           value=[cat_receita[0]]
+                                           value=[]
                                            )
                             ], width=4)
                         ], style={'margin-top':'25px'}),
@@ -166,7 +166,7 @@ layout = dbc.Col([
                                 html.Label('Categoria de Despesa'),
                                 dbc.Select(id='select_despesa',
                                            options=[{'label' : i, 'value' : i} for i in cat_despesa],
-                                           value=[cat_despesa[0]]
+                                           value=[]
                                            )
                             ], width=4)
                         ], style={'margin-top':'25px'}),
@@ -268,14 +268,15 @@ def salveFormReceita(n, descricao, valor, date, switches, categoria, dictReceita
     if n and not (valor == '' or valor==None):
         valor = round(float(valor),2)
         date = pd.to_datetime(date).date()
-        categoria = categoria[0] if type(categoria) == list else categoria
+        n_categoria = categoria[0] if type(categoria) == list else categoria
         recebido = 1 if 1 in switches else 0
         fixo = 1 if 2 in switches else 0
         
-        df_receitas.loc[df_receitas.shape[0]] = [valor, recebido, fixo, date, categoria, descricao ]
+        df_receitas.loc[df_receitas.shape[0]] = [valor, recebido, fixo, date, n_categoria, descricao ]
         df_receitas.to_csv('df_receitas.csv')
         
     data_return = df_receitas.to_dict()
+    
     return data_return
 
 
@@ -302,11 +303,11 @@ def salveFormDespesa(n, descricao, valor, date, switches, categoria, dictDespesa
     if n and not (valor == '' or valor==None):
         valor = round(float(valor),2)
         date = pd.to_datetime(date).date()
-        categoria = categoria[0] if type(categoria) == list else categoria
+        n_categoria = categoria[0] if type(categoria) == list else categoria
         recebido = 1 if 1 in switches else 0
         fixo = 1 if 2 in switches else 0
         
-        df_despesas.loc[df_despesas.shape[0]] = [valor, recebido, fixo, date, categoria, descricao ]
+        df_despesas.loc[df_despesas.shape[0]] = [valor, recebido, fixo, date, n_categoria, descricao ]
         df_despesas.to_csv('df_despesas.csv')
         
     data_return = df_despesas.to_dict()
@@ -374,7 +375,7 @@ def addCategory(n, n2, txt, check_delete, data):
     #pdb.set_trace()
     cat_receita = list(data['Categoria'].values())
     
-    if n and not (txt == '' or txt ==None):
+    if n and not (txt == '' or txt == None):
         '''adicionado uma categoria na lista de categoria'''
         cat_receita = cat_receita + [txt] if txt not in cat_receita else cat_receita
         
@@ -387,4 +388,5 @@ def addCategory(n, n2, txt, check_delete, data):
     df_cat_receitas = pd.DataFrame(cat_receita, columns=['Categoria'])
     df_cat_receitas.to_csv('df_cat_receitas.csv')
     data_return = df_cat_receitas.to_dict()
+    #pdb.set_trace()
     return [opt_receitas, opt_receitas, [], data_return]
